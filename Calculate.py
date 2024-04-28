@@ -1,70 +1,75 @@
 import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
+import csv
 import numpy
+from matplotlib.widgets import TextBox
+import pandas as pd
 import utils
 
-print(utils.mean([99,86,87,88,111,86,103,87,94,78,77,85,86]))
-print(utils.median([99,86,87,88,111,86,103,87,94,78,77,85,86]))
-print(utils.mode([99,86,87,88,111,86,103,87,94,78,77,85,86]))
-print(utils.standard_derivation([32,111,138,28,59,77,97]))
-print(utils.percentile([5,31,43,48,50,41,7,11,15,39,80,82,32,2,8,6,25,36,27,61,31], 75))
+theta0 = 0
+theta1 = 0
 
-# Cambiar la resolucion de la pantalla al iniciar
-plt.rcParams["figure.figsize"] = (18, 11)
+# ----- READ DATA CSV -----
+data = pd.read_csv("data.csv")
+
+def estimate_price(x: int):
+    return theta0 + (theta1 * x)
+
+def draw_table():
+    # ----- CSV TABLE -----
+    plt.subplot(1, 2, 1)
+    plt.axis('tight') #turns off the axis lines and labels
+    plt.axis('off') #changes x and y axis limits such that all data is shown
+    table = plt.table(cellText=data.values, colLabels=data.columns, rowLoc='center', cellLoc='center', loc='center')
+    table.scale(1, 2)
+
+    # Set Colum title to BOLD
+    for (row, col), cell in table.get_celld().items():
+        if (row == 0):
+            cell.set_text_props(fontproperties=FontProperties(weight='bold'))
 
 
-# plot 1:
-x = [0, 1, 2, 3]
-y = [3, 8, 1, 10]
+# ----- GRAPHIC -----
+def draw_graphic():
+    x = numpy.array(data.km)
+    y = numpy.array(data.price)
+    plt.subplot(1, 2, 2)
+    plt.scatter(data.km, data.price)
 
-plt.subplot(2, 3, 1)
-plt.scatter(x,y)  # scatter pone puntos sin unir
-plt.xlabel("Valor X-1")
-plt.ylabel("Valor Y-1")
-plt.title("Grafico 1")
-plt.grid()
+    line_x = [0, data["km"].max()]
+    line_y = [estimate_price(0), estimate_price(data["km"].max())]
+    plt.plot(line_x, line_y, linewidth=3, color="black")
 
-# plot 2:
-x = [0, 1, 2, 3]
-y = [10, 20, 30, 40]
+    # plt.xticks(numpy.arange(0, len(data.km), step=3))
+    plt.xlabel("Mileage", fontsize=15, weight='bold')
+    plt.ylabel("Price", fontsize=15, weight='bold')
 
-plt.subplot(2, 3, 2)
-plt.plot(x, y)  # plot une los puntos formando una linea
-plt.xlabel("Valor X-2")
-plt.ylabel("Valor Y-2")
-plt.title("Grafico 2")
-plt.grid()
 
-# plot 3:
-x = numpy.random.uniform(0.0, 5.0, 1000)
+# ----- INPUT -----
+def submit(text: str):
+    if not text.isnumeric():
+        return
+    print(text)
+    new_y: int = theta0 + (theta1 * int(text))
+    # km.append(int(text))
+    # price.append(new_y)
+    plt.subplot(1, 2, 2)
+    plt.scatter(int(text), new_y, color="red", s=80)
 
-plt.subplot(2, 3, 3)
-plt.hist(x, 10)
-plt.xlabel("Valor X-3")
-plt.ylabel("Valor Y-3")
-plt.title("Grafico 3")
-plt.grid()
 
-# plot 4:
-x = numpy.random.normal(5.0, 1.0, 1000)
-y = numpy.random.normal(10.0, 2.0, 1000)
+def add_input_box():
+    axbox = plt.axes([0.7, 0.91, 0.1, 0.035])
+    text_box = TextBox(axbox, 'Calculate price  ')
+    text_box.on_submit(submit)
 
-plt.subplot(2, 3, 4)
-plt.scatter(x, y)  # plot une los puntos formando una linea
-plt.xlabel("Valor X-4")
-plt.ylabel("Valor Y-4")
-plt.title("Grafico 4")
-plt.grid()
 
-# plot 5:
-x = numpy.random.normal(5.0, 1.0, 100000)
+plt.rcParams["figure.figsize"] = (16, 10)
+draw_graphic()
+draw_table()
 
-plt.subplot(2, 3, 5)
-plt.hist(x, 100)
-plt.xlabel("Valor X-5")
-plt.ylabel("Valor Y-5")
-plt.title("Grafico 5")
-plt.grid()
+axbox = plt.axes([0.7, 0.91, 0.1, 0.035])
+text_box = TextBox(axbox, 'Calculate price  ')
+text_box.on_submit(submit)
 
-plt.suptitle("MY GRAPHS")
-
+plt.suptitle("Data CSV", fontsize=22, weight='bold')
 plt.show()
