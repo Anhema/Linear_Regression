@@ -43,3 +43,6 @@ def standard_derivation(arr: list[int]):
 def percentile(arr: list[int], perc: int):
     return sorted(arr)[int(math.ceil((len(arr) * perc) / 100)) - 1]
 
+
+def estimate_price(x: int, theta0: float, theta1: float):
+    return theta0 + (theta1 * x)

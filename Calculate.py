@@ -1,19 +1,27 @@
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
-import csv
+import json
 import numpy
 from matplotlib.widgets import TextBox
 import pandas as pd
 import utils
+import os
 
 theta0 = 0
 theta1 = 0
+try:
+    f = open("values.csv", "r")
+    file = json.load(f)
+    print(file)
+    theta0 = file["theta0"]
+    theta1 = file["theta1"]
+except:
+    print(theta0)
+    #os.system("python3 Train.py")
+
 
 # ----- READ DATA CSV -----
 data = pd.read_csv("data.csv")
-
-def estimate_price(x: int):
-    return theta0 + (theta1 * x)
 
 def draw_table():
     # ----- CSV TABLE -----
@@ -37,7 +45,7 @@ def draw_graphic():
     plt.scatter(data.km, data.price)
 
     line_x = [0, data["km"].max()]
-    line_y = [estimate_price(0), estimate_price(data["km"].max())]
+    line_y = [utils.estimate_price(0, theta0, theta1), utils.estimate_price(data["km"].max(), theta0, theta1)]
     plt.plot(line_x, line_y, linewidth=3, color="black")
 
     # plt.xticks(numpy.arange(0, len(data.km), step=3))
@@ -51,8 +59,6 @@ def submit(text: str):
         return
     print(text)
     new_y: int = theta0 + (theta1 * int(text))
-    # km.append(int(text))
-    # price.append(new_y)
     plt.subplot(1, 2, 2)
     plt.scatter(int(text), new_y, color="red", s=80)
 
