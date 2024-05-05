@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
+from matplotlib.widgets import Button
 import json
 import numpy
 from matplotlib.widgets import TextBox
@@ -9,15 +10,22 @@ import os
 
 theta0 = 0
 theta1 = 0
-try:
-    f = open("values.csv", "r")
-    file = json.load(f)
-    print(file)
-    theta0 = file["theta0"]
-    theta1 = file["theta1"]
-except:
-    print(theta0)
-    #os.system("python3 Train.py")
+
+def get_theta_values():
+    try:
+        f = open("values.csv", "r")
+        file = json.load(f)
+        print(file)
+        global theta0
+        theta0 = file["theta0"]
+        global theta1
+        theta1 = file["theta1"]
+    except:
+        print("The program is not trained")
+        #os.system("python3 Train.py")
+
+
+get_theta_values()
 
 
 # ----- READ DATA CSV -----
@@ -41,6 +49,7 @@ def draw_table():
 def draw_graphic():
     x = numpy.array(data.km)
     y = numpy.array(data.price)
+    plt.subplot(1, 2, 2).remove()
     plt.subplot(1, 2, 2)
     plt.scatter(data.km, data.price)
 
@@ -61,7 +70,14 @@ def submit(text: str):
     new_y: int = theta0 + (theta1 * int(text))
     plt.subplot(1, 2, 2)
     plt.scatter(int(text), new_y, color="red", s=80)
+    plt.draw()
 
+
+def train(val):
+    os.system("python3 Train.py")
+    get_theta_values()
+    draw_graphic()
+    plt.draw()
 
 def add_input_box():
     axbox = plt.axes([0.7, 0.91, 0.1, 0.035])
@@ -74,8 +90,12 @@ draw_graphic()
 draw_table()
 
 axbox = plt.axes([0.7, 0.91, 0.1, 0.035])
-text_box = TextBox(axbox, 'Calculate price  ')
+text_box = TextBox(axbox, 'Insert mileage to calculate price:  ')
 text_box.on_submit(submit)
+
+# axbtn = plt.axes([0.7, 0.91, 0.1, 0.035])
+btnTrain = Button(plt.axes([0.82, 0.91, 0.08, 0.035]), 'Train')
+btnTrain.on_clicked(train)
 
 plt.suptitle("Data CSV", fontsize=22, weight='bold')
 plt.show()
