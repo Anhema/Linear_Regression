@@ -30,14 +30,15 @@ get_theta_values()
 
 # ----- READ DATA CSV -----
 data = pd.read_csv("data.csv")
+new_values_x = [""]
+new_values_y = [""]
 
 def draw_table():
     # ----- CSV TABLE -----
-    plt.subplot(1, 2, 1)
-    plt.axis('tight') #turns off the axis lines and labels
+    plt.subplot(2, 2, 1)
     plt.axis('off') #changes x and y axis limits such that all data is shown
     table = plt.table(cellText=data.values, colLabels=data.columns, rowLoc='center', cellLoc='center', loc='center')
-    table.scale(1, 2)
+    table.scale(1, 1.1)
 
     # Set Colum title to BOLD
     for (row, col), cell in table.get_celld().items():
@@ -49,8 +50,8 @@ def draw_table():
 def draw_graphic():
     x = numpy.array(data.km)
     y = numpy.array(data.price)
-    plt.subplot(1, 2, 2).remove()
-    plt.subplot(1, 2, 2)
+    plt.subplot(2, 2, 2).remove()
+    plt.subplot(2, 2, 2)
     plt.scatter(data.km, data.price)
 
     line_x = [0, data["km"].max()]
@@ -62,15 +63,35 @@ def draw_graphic():
     plt.ylabel("Price", fontsize=15, weight='bold')
 
 
+# ----- DRAWTABLE FOR NEW VALUES -----
+def draw_new_values():
+    plt.subplot(2, 2, 3).remove()
+    plt.subplot(2, 2, 3)
+    plt.axis('off') #changes x and y axis limits such that all data is shown
+    values = pd.DataFrame(data=numpy.c_[new_values_x, new_values_y])
+    table = plt.table(cellText=values.values, colLabels=["mileage", "price"], rowLoc='center', cellLoc='center', loc='center')
+    table.scale(1, 1.1)
+
+    # Set Colum title to BOLD
+    for (row, col), cell in table.get_celld().items():
+        if (row == 0):
+            cell.set_text_props(fontproperties=FontProperties(weight='bold'))
+
+
 # ----- INPUT -----
 def submit(text: str):
     if not text.isnumeric():
         return
-    print(text)
     new_y: int = theta0 + (theta1 * int(text))
-    plt.subplot(1, 2, 2)
+    plt.subplot(2, 2, 2)
     plt.scatter(int(text), new_y, color="red", s=80)
     plt.draw()
+    global new_values_x
+    global new_values_y
+    if new_values_x.__contains__(text) and new_values_x.
+    new_values_x.append(text)
+    new_values_y.append(str(new_y))
+    draw_new_values()
 
 
 def train(val):
@@ -79,23 +100,41 @@ def train(val):
     draw_graphic()
     plt.draw()
 
+
 def add_input_box():
-    axbox = plt.axes([0.7, 0.91, 0.1, 0.035])
-    text_box = TextBox(axbox, 'Calculate price  ')
-    text_box.on_submit(submit)
+    plt.subplot(2, 2, 4).remove()
+    ax = plt.subplot(2, 2, 4)
+    ax.axis('off')
+
+    info:str = ""
+    info += "estimatePrice(mileage) = θ0 + (θ1 ∗ mileage)\n\n"
+    info += r'Theta0 = learningRate * ' + r'$\frac{1}{m}$ ' + r'$\sum_{i=0}^{m-1} (estimatePrice(mileage[i] - price[i]))$' + "\n"
+    info += r'Theta1 = learningRate * ' + r'$\frac{1}{m}$ ' + r'$\sum_{i=0}^{m-1} (estimatePrice(mileage[i] - price[i]) * mileage[i])$' + "\n\n\n"
+    info += "Theta0: " + str(theta0) + "\n"
+    info += "Theta1: " + str(theta1) + "\n"
+    ax.text(0, 0.3, info, fontsize=9, verticalalignment='bottom', horizontalalignment='left')
 
 
-plt.rcParams["figure.figsize"] = (16, 10)
+
+plt.rcParams["figure.figsize"] = (12, 10)
+fig = plt.figure()
 draw_graphic()
 draw_table()
+draw_new_values()
+add_input_box()
 
-axbox = plt.axes([0.7, 0.91, 0.1, 0.035])
+axbox = plt.axes([0.75, 0.1, 0.1, 0.035])
 text_box = TextBox(axbox, 'Insert mileage to calculate price:  ')
 text_box.on_submit(submit)
 
 # axbtn = plt.axes([0.7, 0.91, 0.1, 0.035])
-btnTrain = Button(plt.axes([0.82, 0.91, 0.08, 0.035]), 'Train')
+btnTrain = Button(plt.axes([0.65, 0.05, 0.08, 0.035]), 'Train')
 btnTrain.on_clicked(train)
 
-plt.suptitle("Data CSV", fontsize=22, weight='bold')
+plt.suptitle("Linear Regression", fontsize=22, weight='bold')
+
+fig.tight_layout()
+fig.canvas.draw()
+fig.canvas.flush_events()
+
 plt.show()

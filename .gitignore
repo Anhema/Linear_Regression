@@ -32,3 +32,6 @@
 *.app
 
 .idea
+
+__pycache__/
+values.csv

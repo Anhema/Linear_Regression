@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
-from matplotlib.animation import FuncAnimation
 import utils
 import numpy as numpy
 import pandas as pd
@@ -8,6 +7,10 @@ import json
 
 
 ITERATONS = 1000
+LEARNINGRATE = 0.01
+DRAWINTERVAL = 10
+STOPPERCENTAJE = 1
+
 
 # ----- READ DATA -----
 data = pd.read_csv("data.csv")
@@ -23,27 +26,28 @@ s_data_km = (data["km"] - mean_km) / std_km
 s_data_price = (data["price"] - mean_price) / std_price
 
 
+
 theta0 = 0
 theta0_desestandarizado = 0
 theta1 = 0
 theta1_desestandarizado = 0
 theta0arr = []
 theta1arr = []
-learningRate = 0.01
+lossarr = []
+losslist = []
 size = len(data["km"])
 
 
-plt.rcParams["figure.figsize"] = (16, 10)
+plt.rcParams["figure.figsize"] = (14, 9)
 plt.ion()
 fig = plt.figure()
-
 
 # ----- GRAPHIC -----
 def draw_graphic():
     x = numpy.array(data.km)
     y = numpy.array(data.price)
-    plt.subplot(1, 3, 1).remove()
-    plt.subplot(1, 3, 1)
+    plt.subplot(2, 3, 2).remove()
+    plt.subplot(2, 3, 2)
     plt.scatter(data.km, data.price)
 
     line_x = [0, data["km"].max()]
@@ -57,33 +61,85 @@ def draw_graphic():
 
 # ----- GRAPHIC THETA0-----
 def draw_theta0():
-    plt.subplot(1, 3, 2).remove()
-    plt.subplot(1, 3, 2)
+    plt.subplot(2, 3, 4).remove()
+    plt.subplot(2, 3, 4)
 
     line_y = numpy.array(theta0arr)
     plt.plot(numpy.array(line_y), linewidth=3, color="black")
 
-    plt.xticks(numpy.arange(0, ITERATONS, step=100))
-    plt.yticks(numpy.arange(line_y.min(), 8500, step=500))
+    plt.xticks(numpy.arange(0, ITERATONS + 100, step=100))
+    plt.yticks(numpy.arange(line_y.min(), 9500, step=500))
     plt.xlabel("Iterations", fontsize=15, weight='bold')
     plt.ylabel("Theta0", fontsize=15, weight='bold')
 
 
 # ----- GRAPHIC THETA1-----
 def draw_theta1():
-    plt.subplot(1, 3, 3).remove()
-    plt.subplot(1, 3, 3)
+    plt.subplot(2, 3, 5).remove()
+    plt.subplot(2, 3, 5)
 
     line_x = numpy.array(theta1arr)
     y = []
     for i in range(len(theta1arr)):
         y.append(i)
-    plt.plot(numpy.array(line_x), numpy.array(y), linewidth=3, color="black")
+    plt.plot(numpy.array(y), numpy.array(line_x), linewidth=3, color="black")
 
-    plt.yticks(numpy.arange(0, ITERATONS, step=100))
-    plt.xticks(numpy.arange(line_x.min(), 0.1, step=0.1))
+    plt.xticks(numpy.arange(0, ITERATONS + 100, step=100))
+    plt.yticks(numpy.arange(-0.025, 0, step=0.005))
     plt.xlabel("Iterations", fontsize=15, weight='bold')
     plt.ylabel("Theta1", fontsize=15, weight='bold')
+
+
+# ----- GRAPHIC LOSS -----
+def draw_loss():
+    plt.subplot(2, 3, 6).remove()
+    plt.subplot(2, 3, 6)
+
+    line_x = numpy.array(lossarr)
+    y = []
+    for i in range(len(lossarr)):
+        y.append(i)
+    plt.plot(numpy.array(y), numpy.array(line_x), linewidth=3, color="black")
+
+    plt.xticks(numpy.arange(0, ITERATONS + 100, step=100))
+    plt.yticks(numpy.arange(0, 3, step=0.5))
+    plt.xlabel("Iterations", fontsize=15, weight='bold')
+    plt.ylabel("LOSS", fontsize=15, weight='bold')
+
+
+# ----- DRAW TABLE -----
+def draw_table():
+    plt.subplot(2, 3, 1).remove()
+    plt.subplot(2, 3, 1)
+    plt.axis('off') #changes x and y axis limits such that all data is shown
+    table = plt.table(cellText=data.values, colLabels=data.columns, rowLoc='center', cellLoc='center', loc='center')
+    table.scale(1, 1.1)
+
+    # Set Colum title to BOLD
+    for (row, col), cell in table.get_celld().items():
+        if (row == 0):
+            cell.set_text_props(fontproperties=FontProperties(weight='bold'))
+
+
+# ----- INFO-----
+def draw_info(iteration: int):
+    plt.subplot(2, 3, 3).remove()
+    ax = plt.subplot(2, 3, 3)
+    ax.axis('off')
+    ax.set_title('Training Information', fontsize=14, fontweight='bold')
+    info:str = ""
+    info += "Learning Rate: " + str(LEARNINGRATE) + "\n"
+    info += "Max Iterations: " + str(ITERATONS) + "\n"
+    info += "Refresh iterations: " + str(DRAWINTERVAL) + "\n"
+    info += "Stop Percentaje: " + str(STOPPERCENTAJE) + "%\n\n\n"
+    info += "Iteration: " + str(iteration) + "\n"
+    info += "Loss: " + str(lossarr[len(lossarr) - 1]) + "\n"
+    info += "Theta0: " + str(theta0_desestandarizado) + "\n"
+    info += "Theta1: " + str(theta1_desestandarizado) + "\n\n\n\n"
+    info += "estimatePrice(mileage) = θ0 + (θ1 ∗ mileage)\n\n"
+    info += r'Theta0 = learningRate * ' + r'$\frac{1}{m}$ ' + r'$\sum_{i=0}^{m-1} (estimatePrice(mileage[i] - price[i]))$' + "\n"
+    info += r'Theta1 = learningRate * ' + r'$\frac{1}{m}$ ' + r'$\sum_{i=0}^{m-1} (estimatePrice(mileage[i] - price[i]) * mileage[i])$' + "\n"
+    ax.text(-0.2, -0.05, info, fontsize=9, verticalalignment='bottom', horizontalalignment='left')
 
 
 def train():
@@ -92,37 +148,45 @@ def train():
     global theta1
     global theta1_desestandarizado
     # ----- TRAIN -----
-    for i in range(ITERATONS):
+    for i in range(1, ITERATONS + 1):
         D_t0 = 0
         D_t1 = 0
+        loss = 0
         for x in range(size):
             predicted = theta0 + (theta1 * s_data_km[x])
+            loss = predicted - s_data_price[x]
             D_t0 += predicted - s_data_price[x]
             D_t1 += (predicted - s_data_price[x]) * s_data_km[x]
-        theta0 = theta0 - (learningRate * (1 / size) * D_t0)
-        theta1 = theta1 - (learningRate * (1 / size) * D_t1)
+        losslist.append(loss ** 2)
+        lossarr.append(utils.mean(losslist))
+        theta0 = theta0 - (LEARNINGRATE * (1 / size) * D_t0)
+        theta1 = theta1 - (LEARNINGRATE * (1 / size) * D_t1)
         # ----- DESTANDARIZE DATA -----
         theta0_desestandarizado = mean_price + (theta0 * std_price / std_km) - (theta1 * mean_km * std_price / std_km)
         theta1_desestandarizado = theta1 * std_price / std_km
         theta0arr.append(theta0_desestandarizado)
         theta1arr.append(theta1_desestandarizado)
-        draw_graphic()
-        draw_theta0()
-        draw_theta1()
+        # ----- DRAW EVERY 5 ITERATIONS -----
+        if i % DRAWINTERVAL == 0:
+            draw_graphic()
+            draw_theta0()
+            draw_theta1()
+            draw_loss()
+            draw_info(i)
+            draw_table()
+            fig.tight_layout()
+            fig.canvas.draw()
+            fig.canvas.flush_events()
 
-        fig.canvas.draw()
-        fig.canvas.flush_events()
-        print("Theta0:", theta0_desestandarizado)
-        print("Theta1:", theta1_desestandarizado)
+        # print("Theta0:", theta0_desestandarizado)
+        # print("Theta1:", theta1_desestandarizado)
 
     # ----- SEND THETA RESULT TO FILE -----
     with open("values.csv", "w") as f:
         f.write(json.dumps({'theta0': theta0_desestandarizado, 'theta1': theta1_desestandarizado}))
 
-
-plt.rcParams["figure.figsize"] = (16, 10)
-draw_graphic()
-plt.suptitle("Data CSV", fontsize=22, weight='bold')
+    
+plt.suptitle("TRAINING LINEAR REGRESSION", fontsize=22, weight='bold')
 train()
-plt.show()
+plt.show(block=True)
 
