@@ -9,7 +9,7 @@ import json
 ITERATONS = 1000
 LEARNINGRATE = 0.01
 DRAWINTERVAL = 10
-STOPPERCENTAJE = 1
+STOPPERCENTAJE = 0.0001
 
 
 # ----- READ DATA -----
@@ -157,6 +157,10 @@ def train():
             loss = predicted - s_data_price[x]
             D_t0 += predicted - s_data_price[x]
             D_t1 += (predicted - s_data_price[x]) * s_data_km[x]
+        if len(losslist) > 1:
+            percent = abs((loss ** 2) - losslist[len(losslist) - 1]) / losslist[len(losslist) - 1]
+            if percent <= STOPPERCENTAJE:
+                break;
         losslist.append(loss ** 2)
         lossarr.append(utils.mean(losslist))
         theta0 = theta0 - (LEARNINGRATE * (1 / size) * D_t0)
@@ -178,6 +182,7 @@ def train():
             fig.canvas.draw()
             fig.canvas.flush_events()
 
+        
         # print("Theta0:", theta0_desestandarizado)
         # print("Theta1:", theta1_desestandarizado)
 

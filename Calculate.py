@@ -88,7 +88,6 @@ def submit(text: str):
     plt.draw()
     global new_values_x
     global new_values_y
-    if new_values_x.__contains__(text) and new_values_x.
     new_values_x.append(text)
     new_values_y.append(str(new_y))
     draw_new_values()
