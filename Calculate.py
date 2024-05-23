@@ -27,7 +27,6 @@ def get_theta_values():
 
 get_theta_values()
 
-
 # ----- READ DATA CSV -----
 data = pd.read_csv("data.csv")
 new_values_x = [""]
@@ -82,14 +81,19 @@ def draw_new_values():
 def submit(text: str):
     if not text.isnumeric():
         return
-    new_y: int = theta0 + (theta1 * int(text))
+    new_y: float = theta0 + (theta1 * float(text))
     plt.subplot(2, 2, 2)
     plt.scatter(int(text), new_y, color="red", s=80)
     plt.draw()
     global new_values_x
     global new_values_y
+    global text_box
+    
+    text_box.set_val("")
     new_values_x.append(text)
-    new_values_y.append(str(new_y))
+    new_values_y.append(str(round(new_y, 2)))
+    new_values_x.remove("")
+    new_values_y.remove("")
     draw_new_values()
 
 
