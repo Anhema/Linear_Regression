@@ -4,12 +4,17 @@ import utils
 import numpy as numpy
 import pandas as pd
 import json
+import os
 
 
 ITERATONS = 1000
 LEARNINGRATE = 0.01
 DRAWINTERVAL = 10
-STOPPERCENTAJE = 0.0001
+STOPPERCENTAJE = 0.00001
+
+# ----- DELETE CURREN FILE IF EXIST -----
+if os.path.exists("values.csv"):
+  os.remove("values.csv")
 
 
 # ----- READ DATA -----
@@ -26,7 +31,6 @@ s_data_km = (data["km"] - mean_km) / std_km
 s_data_price = (data["price"] - mean_price) / std_price
 
 
-
 theta0 = 0
 theta0_desestandarizado = 0
 theta1 = 0
@@ -37,6 +41,7 @@ lossarr = []
 losslist = []
 size = len(data["km"])
 
+trainingFinished: bool = False
 
 plt.rcParams["figure.figsize"] = (14, 9)
 plt.ion()
@@ -126,7 +131,11 @@ def draw_info(iteration: int):
     plt.subplot(2, 3, 3).remove()
     ax = plt.subplot(2, 3, 3)
     ax.axis('off')
-    ax.set_title('Training Information', fontsize=14, fontweight='bold')
+    if trainingFinished:
+        ax.set_title('Training Finished', fontsize=14, fontweight='bold', color="green")
+    else:
+        ax.set_title('Training in progress', fontsize=14, fontweight='bold', color="red")
+    
     info:str = ""
     info += "Learning Rate: " + str(LEARNINGRATE) + "\n"
     info += "Max Iterations: " + str(ITERATONS) + "\n"
@@ -142,11 +151,27 @@ def draw_info(iteration: int):
     ax.text(-0.2, -0.05, info, fontsize=9, verticalalignment='bottom', horizontalalignment='left')
 
 
+def show_metrics(i: int):
+    try:
+        draw_graphic()
+        draw_theta0()
+        draw_theta1()
+        draw_loss()
+        draw_info(i)
+        draw_table()
+        fig.tight_layout()
+        fig.canvas.draw()
+        fig.canvas.flush_events()
+    except KeyboardInterrupt:
+        exit()
+
+
 def train():
     global theta0
     global theta0_desestandarizado
     global theta1
     global theta1_desestandarizado
+    global trainingFinished
     # ----- TRAIN -----
     for i in range(1, ITERATONS + 1):
         D_t0 = 0
@@ -160,6 +185,7 @@ def train():
         if len(losslist) > 1:
             percent = abs((loss ** 2) - losslist[len(losslist) - 1]) / losslist[len(losslist) - 1]
             if percent <= STOPPERCENTAJE:
+                trainingFinished = True
                 break;
         losslist.append(loss ** 2)
         lossarr.append(utils.mean(losslist))
@@ -172,17 +198,11 @@ def train():
         theta1arr.append(theta1_desestandarizado)
         # ----- DRAW EVERY 5 ITERATIONS -----
         if i % DRAWINTERVAL == 0:
-            draw_graphic()
-            draw_theta0()
-            draw_theta1()
-            draw_loss()
-            draw_info(i)
-            draw_table()
-            fig.tight_layout()
-            fig.canvas.draw()
-            fig.canvas.flush_events()
+            show_metrics(i)
 
-        
+    trainingFinished = True
+    show_metrics(ITERATONS)
+   
         # print("Theta0:", theta0_desestandarizado)
         # print("Theta1:", theta1_desestandarizado)
 
@@ -190,8 +210,11 @@ def train():
     with open("values.csv", "w") as f:
         f.write(json.dumps({'theta0': theta0_desestandarizado, 'theta1': theta1_desestandarizado}))
 
-    
 plt.suptitle("TRAINING LINEAR REGRESSION", fontsize=22, weight='bold')
 train()
-plt.show(block=True)
+
+try:
+    plt.show(block=True)
+except KeyboardInterrupt:
+    exit()
 

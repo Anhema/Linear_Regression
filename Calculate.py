@@ -57,7 +57,7 @@ def draw_graphic():
     line_y = [utils.estimate_price(0, theta0, theta1), utils.estimate_price(data["km"].max(), theta0, theta1)]
     plt.plot(line_x, line_y, linewidth=3, color="black")
 
-    # plt.xticks(numpy.arange(0, len(data.km), step=3))
+    plt.xticks(numpy.arange(0, 300000, step=50000))
     plt.xlabel("Mileage", fontsize=15, weight='bold')
     plt.ylabel("Price", fontsize=15, weight='bold')
 
@@ -68,7 +68,7 @@ def draw_new_values():
     plt.subplot(2, 2, 3)
     plt.axis('off') #changes x and y axis limits such that all data is shown
     values = pd.DataFrame(data=numpy.c_[new_values_x, new_values_y])
-    table = plt.table(cellText=values.values, colLabels=["mileage", "price"], rowLoc='center', cellLoc='center', loc='center')
+    table = plt.table(cellText=values.values, colLabels=["km", "price"], rowLoc='center', cellLoc='center', loc='center')
     table.scale(1, 1.1)
 
     # Set Colum title to BOLD
@@ -79,21 +79,24 @@ def draw_new_values():
 
 # ----- INPUT -----
 def submit(text: str):
-    if not text.isnumeric():
+    global text_box
+    text = text_box.text
+    if not text.isnumeric() or float(text) >= 396283 or float(text) <= 0:
+        text_box.set_val("")
         return
     new_y: float = theta0 + (theta1 * float(text))
     plt.subplot(2, 2, 2)
-    plt.scatter(int(text), new_y, color="red", s=80)
+    plt.scatter(float(text), new_y, color="red", s=80)
     plt.draw()
     global new_values_x
     global new_values_y
-    global text_box
     
     text_box.set_val("")
     new_values_x.append(text)
     new_values_y.append(str(round(new_y, 2)))
-    new_values_x.remove("")
-    new_values_y.remove("")
+    if new_values_x.__contains__(""):
+        new_values_x.remove("")
+        new_values_y.remove("")
     draw_new_values()
 
 
@@ -102,6 +105,7 @@ def train(val):
     get_theta_values()
     draw_graphic()
     plt.draw()
+    # exit()
 
 
 def add_input_box():
@@ -125,19 +129,25 @@ draw_graphic()
 draw_table()
 draw_new_values()
 add_input_box()
-
-axbox = plt.axes([0.75, 0.1, 0.1, 0.035])
-text_box = TextBox(axbox, 'Insert mileage to calculate price:  ')
-text_box.on_submit(submit)
-
-# axbtn = plt.axes([0.7, 0.91, 0.1, 0.035])
-btnTrain = Button(plt.axes([0.65, 0.05, 0.08, 0.035]), 'Train')
-btnTrain.on_clicked(train)
-
 plt.suptitle("Linear Regression", fontsize=22, weight='bold')
 
 fig.tight_layout()
+
+axbox = plt.axes([0.7, 0.1, 0.1, 0.035])
+text_box = TextBox(axbox, 'Insert mileage to calculate price:  ')
+# text_box.on_submit(submit)
+
+# axbtn = plt.axes([0.7, 0.91, 0.1, 0.035])
+btnCalculate = Button(plt.axes([0.81, 0.1, 0.1, 0.035]), 'Calculate')
+btnCalculate.on_clicked(submit)
+
+btnTrain = Button(plt.axes([0.5, 0.05, 0.08, 0.035]), 'Train')
+btnTrain.on_clicked(train)
+
 fig.canvas.draw()
 fig.canvas.flush_events()
 
-plt.show()
+try:
+    plt.show()
+except KeyboardInterrupt:
+    exit()
