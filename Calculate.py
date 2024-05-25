@@ -147,6 +147,10 @@ btnTrain.on_clicked(train)
 fig.canvas.draw()
 fig.canvas.flush_events()
 
+def on_close(event):
+    exit()
+fig.canvas.mpl_connect('close_event', on_close)
+
 try:
     plt.show()
 except KeyboardInterrupt:

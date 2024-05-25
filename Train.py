@@ -43,9 +43,16 @@ size = len(data["km"])
 
 trainingFinished: bool = False
 
-plt.rcParams["figure.figsize"] = (14, 9)
-plt.ion()
-fig = plt.figure()
+try:
+    plt.rcParams["figure.figsize"] = (16, 9)
+    plt.ion()
+    fig = plt.figure()
+except KeyboardInterrupt:
+    exit()
+
+def on_close(event):
+    exit()
+fig.canvas.mpl_connect('close_event', on_close)
 
 # ----- GRAPHIC -----
 def draw_graphic():
@@ -72,7 +79,7 @@ def draw_theta0():
     line_y = numpy.array(theta0arr)
     plt.plot(numpy.array(line_y), linewidth=3, color="black")
 
-    plt.xticks(numpy.arange(0, ITERATONS + 100, step=100))
+    plt.xticks(numpy.arange(0, ITERATONS + 100, step=ITERATONS / 10))
     plt.yticks(numpy.arange(line_y.min(), 9500, step=500))
     plt.xlabel("Iterations", fontsize=15, weight='bold')
     plt.ylabel("Theta0", fontsize=15, weight='bold')
@@ -89,7 +96,7 @@ def draw_theta1():
         y.append(i)
     plt.plot(numpy.array(y), numpy.array(line_x), linewidth=3, color="black")
 
-    plt.xticks(numpy.arange(0, ITERATONS + 100, step=100))
+    plt.xticks(numpy.arange(0, ITERATONS + 100, step=ITERATONS / 10))
     plt.yticks(numpy.arange(-0.025, 0, step=0.005))
     plt.xlabel("Iterations", fontsize=15, weight='bold')
     plt.ylabel("Theta1", fontsize=15, weight='bold')
@@ -106,7 +113,7 @@ def draw_loss():
         y.append(i)
     plt.plot(numpy.array(y), numpy.array(line_x), linewidth=3, color="black")
 
-    plt.xticks(numpy.arange(0, ITERATONS + 100, step=100))
+    plt.xticks(numpy.arange(0, ITERATONS + 100, step=ITERATONS / 10))
     plt.yticks(numpy.arange(0, 3, step=0.5))
     plt.xlabel("Iterations", fontsize=15, weight='bold')
     plt.ylabel("LOSS", fontsize=15, weight='bold')
@@ -217,4 +224,3 @@ try:
     plt.show(block=True)
 except KeyboardInterrupt:
     exit()
-
